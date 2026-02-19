@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       NUXT_MONGO_URI: ${MONGO_URI}
-      NUXT_MONGO_COLLECTION: ${MONGO_COLLECTION:-gabagool_events}
+      NUXT_MONGO_COLLECTION: ${NUXT_MONGO_COLLECTION:-gabagool_events}
     security_opt:
       - label:disable
     networks:
