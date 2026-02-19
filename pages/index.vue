@@ -8,6 +8,7 @@ const { lastEvent, connected, onEvent, connect } = useEventStream()
 const selectedMarket = ref<string | null>(null)
 const autoTrack = ref(true)
 const modeFilter = ref('all')
+const sidebarOpen = ref(false)
 
 // Fetch markets on mount
 onMounted(async () => {
@@ -28,6 +29,7 @@ onMounted(async () => {
 async function onSelectMarket(slug: string) {
   selectedMarket.value = slug
   autoTrack.value = false
+  sidebarOpen.value = false // Close sidebar on mobile after selection
   await fetchRound(slug, modeFilter.value)
 }
 
@@ -74,24 +76,58 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden bg-zinc-950">
+  <div class="flex h-[100dvh] overflow-hidden bg-zinc-950">
+    <!-- Mobile sidebar backdrop -->
+    <Transition
+      enter-active-class="transition-opacity duration-200"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="sidebarOpen"
+        class="fixed inset-0 z-30 bg-black/60 md:hidden"
+        @click="sidebarOpen = false"
+      />
+    </Transition>
+
     <!-- Sidebar -->
-    <Sidebar
-      :markets="markets"
-      :selected-market="selectedMarket"
-      :auto-track="autoTrack"
-      :mode-filter="modeFilter"
-      @select="onSelectMarket"
-      @update:auto-track="autoTrack = $event"
-      @update:mode-filter="modeFilter = $event"
-    />
+    <div
+      :class="[
+        'fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0 md:z-auto',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      ]"
+    >
+      <Sidebar
+        :markets="markets"
+        :selected-market="selectedMarket"
+        :auto-track="autoTrack"
+        :mode-filter="modeFilter"
+        @select="onSelectMarket"
+        @update:auto-track="autoTrack = $event"
+        @update:mode-filter="modeFilter = $event"
+      />
+    </div>
 
     <!-- Main content -->
-    <main class="flex-1 flex flex-col overflow-hidden">
-      <!-- Connection indicator -->
-      <div class="flex items-center gap-2 px-4 py-1.5 bg-zinc-900/50 border-b border-zinc-800/50 text-[10px]">
+    <main class="flex-1 flex flex-col overflow-hidden min-w-0">
+      <!-- Connection indicator + hamburger -->
+      <div class="flex items-center gap-2 px-3 md:px-4 py-1.5 bg-zinc-900/50 border-b border-zinc-800/50 text-[10px]">
+        <!-- Hamburger button (mobile only) -->
+        <button
+          class="md:hidden p-1 -ml-1 text-zinc-400 hover:text-zinc-200 transition-colors"
+          @click="sidebarOpen = !sidebarOpen"
+          aria-label="Toggle sidebar"
+        >
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+
         <span
-          :class="['w-1.5 h-1.5 rounded-full', connected ? 'bg-emerald-400' : 'bg-red-400']"
+          :class="['w-1.5 h-1.5 rounded-full shrink-0', connected ? 'bg-emerald-400' : 'bg-red-400']"
         />
         <span class="text-zinc-500">
           {{ connected ? 'Live' : 'Disconnected' }}
@@ -105,10 +141,16 @@ onUnmounted(() => {
       </div>
 
       <!-- No selection state -->
-      <div v-else-if="!selectedMarket" class="flex-1 flex items-center justify-center">
+      <div v-else-if="!selectedMarket" class="flex-1 flex items-center justify-center px-4">
         <div class="text-center">
           <p class="text-zinc-500 text-sm">Select a market from the sidebar</p>
           <p class="text-zinc-600 text-xs mt-1">or enable auto-track to follow the latest round</p>
+          <button
+            class="mt-3 md:hidden text-xs text-teal-500 border border-teal-500/30 rounded px-3 py-1.5 hover:bg-teal-500/10 transition-colors"
+            @click="sidebarOpen = true"
+          >
+            Open Markets
+          </button>
         </div>
       </div>
 
@@ -120,8 +162,8 @@ onUnmounted(() => {
         <!-- Chart + Table -->
         <div class="flex-1 flex flex-col overflow-hidden">
           <!-- Chart area -->
-          <div class="flex-shrink-0 h-[45%] min-h-[280px] p-4">
-            <div class="w-full h-full bg-zinc-900 rounded border border-zinc-800 p-3">
+          <div class="flex-shrink-0 h-[40%] sm:h-[45%] min-h-[220px] sm:min-h-[280px] p-2 sm:p-4">
+            <div class="w-full h-full bg-zinc-900 rounded border border-zinc-800 p-2 sm:p-3">
               <ClientOnly>
                 <OrderChart :round="roundData" />
               </ClientOnly>

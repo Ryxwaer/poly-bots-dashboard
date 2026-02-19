@@ -53,92 +53,183 @@ function statusLabel(buy: AnnotatedBuy): string {
 </script>
 
 <template>
-  <div class="overflow-x-auto">
-    <table class="w-full text-xs tabular-nums">
-      <thead>
-        <tr class="border-b border-zinc-800 text-zinc-500">
-          <th class="text-left py-2 px-3 font-medium">Time</th>
-          <th class="text-left py-2 px-3 font-medium">Event</th>
-          <th class="text-left py-2 px-3 font-medium">Side</th>
-          <th class="text-right py-2 px-3 font-medium">Price</th>
-          <th class="text-right py-2 px-3 font-medium">Size</th>
-          <th class="text-right py-2 px-3 font-medium">Pair Cost</th>
-          <th class="text-right py-2 px-3 font-medium">Profit</th>
-          <th class="text-left py-2 px-3 font-medium">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-for="(entry, idx) in timeline" :key="idx">
-          <!-- Buy row -->
-          <tr
-            v-if="entry.type === 'buy' && entry.buy"
-            :class="[
-              'border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors',
-              !entry.buy.merged && entry.buy.mergeGroupIds.length === 0 ? 'bg-red-400/5' : ''
-            ]"
-          >
-            <td class="py-1.5 px-3 text-zinc-500">{{ formatTime(entry.buy.ts) }}</td>
-            <td class="py-1.5 px-3 text-zinc-400">BUY</td>
-            <td class="py-1.5 px-3 font-medium" :class="sideClass(entry.buy.side)">
-              {{ entry.buy.side }}
-            </td>
-            <td class="py-1.5 px-3 text-right text-zinc-300">${{ entry.buy.price.toFixed(3) }}</td>
-            <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.buy.size }}</td>
-            <td class="py-1.5 px-3 text-right text-zinc-500">
-              {{ entry.buy.pairCost !== null ? entry.buy.pairCost.toFixed(4) : '—' }}
-            </td>
-            <td class="py-1.5 px-3 text-right text-zinc-600">—</td>
-            <td class="py-1.5 px-3">
-              <span
-                :class="[
-                  'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded',
-                  statusClass(entry.buy)
-                ]"
-              >
-                <!-- Warning icon for unmatched -->
-                <svg
-                  v-if="!entry.buy.merged && entry.buy.mergeGroupIds.length === 0"
-                  class="w-3 h-3"
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+  <div>
+    <!-- ── Desktop table (hidden on small screens) ────────────────────── -->
+    <div class="hidden sm:block overflow-x-auto">
+      <table class="w-full text-xs tabular-nums">
+        <thead>
+          <tr class="border-b border-zinc-800 text-zinc-500">
+            <th class="text-left py-2 px-3 font-medium">Time</th>
+            <th class="text-left py-2 px-3 font-medium">Event</th>
+            <th class="text-left py-2 px-3 font-medium">Side</th>
+            <th class="text-right py-2 px-3 font-medium">Price</th>
+            <th class="text-right py-2 px-3 font-medium">Size</th>
+            <th class="text-right py-2 px-3 font-medium">Pair Cost</th>
+            <th class="text-right py-2 px-3 font-medium">Profit</th>
+            <th class="text-left py-2 px-3 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="(entry, idx) in timeline" :key="idx">
+            <!-- Buy row -->
+            <tr
+              v-if="entry.type === 'buy' && entry.buy"
+              :class="[
+                'border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors',
+                !entry.buy.merged && entry.buy.mergeGroupIds.length === 0 ? 'bg-red-400/5' : ''
+              ]"
+            >
+              <td class="py-1.5 px-3 text-zinc-500">{{ formatTime(entry.buy.ts) }}</td>
+              <td class="py-1.5 px-3 text-zinc-400">BUY</td>
+              <td class="py-1.5 px-3 font-medium" :class="sideClass(entry.buy.side)">
+                {{ entry.buy.side }}
+              </td>
+              <td class="py-1.5 px-3 text-right text-zinc-300">${{ entry.buy.price.toFixed(3) }}</td>
+              <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.buy.size }}</td>
+              <td class="py-1.5 px-3 text-right text-zinc-500">
+                {{ entry.buy.pairCost !== null ? entry.buy.pairCost.toFixed(4) : '—' }}
+              </td>
+              <td class="py-1.5 px-3 text-right text-zinc-600">—</td>
+              <td class="py-1.5 px-3">
+                <span
+                  :class="[
+                    'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded',
+                    statusClass(entry.buy)
+                  ]"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-                {{ statusLabel(entry.buy) }}
-              </span>
+                  <svg
+                    v-if="!entry.buy.merged && entry.buy.mergeGroupIds.length === 0"
+                    class="w-3 h-3"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                  {{ statusLabel(entry.buy) }}
+                </span>
+              </td>
+            </tr>
+
+            <!-- Merge row -->
+            <tr
+              v-if="entry.type === 'merge' && entry.merge"
+              class="border-b border-zinc-800/50 bg-emerald-400/5"
+            >
+              <td class="py-1.5 px-3 text-zinc-500">{{ formatTime(entry.merge.ts) }}</td>
+              <td class="py-1.5 px-3 text-emerald-400 font-medium">MERGE</td>
+              <td class="py-1.5 px-3 text-zinc-500">—</td>
+              <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.merge.pairCost.toFixed(4) }}</td>
+              <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.merge.pairs }}</td>
+              <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.merge.pairCost.toFixed(4) }}</td>
+              <td class="py-1.5 px-3 text-right text-emerald-400 font-medium">
+                +${{ entry.merge.profit.toFixed(2) }}
+              </td>
+              <td class="py-1.5 px-3">
+                <span class="text-[10px] text-zinc-500 truncate block max-w-[120px]" :title="entry.merge.txHash || ''">
+                  {{ entry.merge.txHash ? entry.merge.txHash.slice(0, 10) + '...' : 'simulated' }}
+                </span>
+              </td>
+            </tr>
+          </template>
+
+          <!-- Empty state -->
+          <tr v-if="timeline.length === 0">
+            <td colspan="8" class="py-8 text-center text-zinc-600">
+              No events in this round
             </td>
           </tr>
+        </tbody>
+      </table>
+    </div>
 
-          <!-- Merge row -->
-          <tr
-            v-if="entry.type === 'merge' && entry.merge"
-            class="border-b border-zinc-800/50 bg-emerald-400/5"
-          >
-            <td class="py-1.5 px-3 text-zinc-500">{{ formatTime(entry.merge.ts) }}</td>
-            <td class="py-1.5 px-3 text-emerald-400 font-medium">MERGE</td>
-            <td class="py-1.5 px-3 text-zinc-500">—</td>
-            <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.merge.pairCost.toFixed(4) }}</td>
-            <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.merge.pairs }}</td>
-            <td class="py-1.5 px-3 text-right text-zinc-400">{{ entry.merge.pairCost.toFixed(4) }}</td>
-            <td class="py-1.5 px-3 text-right text-emerald-400 font-medium">
+    <!-- ── Mobile card list (visible on small screens) ────────────────── -->
+    <div class="sm:hidden divide-y divide-zinc-800/50">
+      <template v-for="(entry, idx) in timeline" :key="idx">
+        <!-- Buy card -->
+        <div
+          v-if="entry.type === 'buy' && entry.buy"
+          :class="[
+            'px-3 py-2.5',
+            !entry.buy.merged && entry.buy.mergeGroupIds.length === 0 ? 'bg-red-400/5' : ''
+          ]"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-zinc-500 tabular-nums">{{ formatTime(entry.buy.ts) }}</span>
+              <span class="text-[10px] text-zinc-500">BUY</span>
+              <span class="text-xs font-medium" :class="sideClass(entry.buy.side)">
+                {{ entry.buy.side }}
+              </span>
+            </div>
+            <span
+              :class="[
+                'inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded',
+                statusClass(entry.buy)
+              ]"
+            >
+              <svg
+                v-if="!entry.buy.merged && entry.buy.mergeGroupIds.length === 0"
+                class="w-2.5 h-2.5"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+              {{ statusLabel(entry.buy) }}
+            </span>
+          </div>
+          <div class="flex items-center gap-3 mt-1 text-[11px] tabular-nums">
+            <span>
+              <span class="text-zinc-500">Price </span>
+              <span class="text-zinc-300">${{ entry.buy.price.toFixed(3) }}</span>
+            </span>
+            <span>
+              <span class="text-zinc-500">Size </span>
+              <span class="text-zinc-400">{{ entry.buy.size }}</span>
+            </span>
+            <span v-if="entry.buy.pairCost !== null">
+              <span class="text-zinc-500">PC </span>
+              <span class="text-zinc-400">{{ entry.buy.pairCost.toFixed(4) }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Merge card -->
+        <div
+          v-if="entry.type === 'merge' && entry.merge"
+          class="px-3 py-2.5 bg-emerald-400/5"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] text-zinc-500 tabular-nums">{{ formatTime(entry.merge.ts) }}</span>
+              <span class="text-xs text-emerald-400 font-medium">MERGE</span>
+            </div>
+            <span class="text-xs text-emerald-400 font-medium tabular-nums">
               +${{ entry.merge.profit.toFixed(2) }}
-            </td>
-            <td class="py-1.5 px-3">
-              <span class="text-[10px] text-zinc-500 truncate block max-w-[120px]" :title="entry.merge.txHash || ''">
-                {{ entry.merge.txHash ? entry.merge.txHash.slice(0, 10) + '...' : 'simulated' }}
-              </span>
-            </td>
-          </tr>
-        </template>
+            </span>
+          </div>
+          <div class="flex items-center gap-3 mt-1 text-[11px] tabular-nums">
+            <span>
+              <span class="text-zinc-500">Pairs </span>
+              <span class="text-zinc-400">{{ entry.merge.pairs }}</span>
+            </span>
+            <span>
+              <span class="text-zinc-500">Cost </span>
+              <span class="text-zinc-400">{{ entry.merge.pairCost.toFixed(4) }}</span>
+            </span>
+            <span class="text-[10px] text-zinc-600">
+              {{ entry.merge.txHash ? entry.merge.txHash.slice(0, 8) + '…' : 'sim' }}
+            </span>
+          </div>
+        </div>
+      </template>
 
-        <!-- Empty state -->
-        <tr v-if="timeline.length === 0">
-          <td colspan="8" class="py-8 text-center text-zinc-600">
-            No events in this round
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <!-- Empty state -->
+      <div v-if="timeline.length === 0" class="py-8 text-center text-zinc-600 text-sm">
+        No events in this round
+      </div>
+    </div>
   </div>
 </template>

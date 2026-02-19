@@ -251,89 +251,112 @@ watch(() => props.round.market, () => {
   selectedGroupId.value = null
 })
 
+// ── Detect mobile viewport ─────────────────────────────────────────
+const isMobile = ref(false)
+
+function checkMobile() {
+  isMobile.value = typeof window !== 'undefined' && window.innerWidth < 640
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 // ── Chart options ──────────────────────────────────────────────────
-const chartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: { duration: 200 },
-  interaction: {
-    mode: 'nearest' as const,
-    intersect: true,
-  },
-  onClick: onChartClick,
-  scales: {
-    x: {
-      type: 'linear' as const,
-      grid: { color: COLORS.GRID, drawTicks: false },
-      border: { color: COLORS.GRID },
-      ticks: {
-        color: COLORS.TEXT,
-        font: { size: 10, family: 'monospace' },
-        callback: (value: number) => {
-          const d = new Date(value)
-          return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')}`
-        },
-        maxTicksLimit: 10,
-      },
+const chartOptions = computed(() => {
+  const mobile = isMobile.value
+  const tickFontSize = mobile ? 8 : 10
+  const maxTicks = mobile ? 5 : 10
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 200 },
+    interaction: {
+      mode: 'nearest' as const,
+      intersect: true,
     },
-    y: {
-      grid: { color: COLORS.GRID, drawTicks: false },
-      border: { color: COLORS.GRID },
-      ticks: {
-        color: COLORS.TEXT,
-        font: { size: 10, family: 'monospace' },
-        callback: (value: number) => `$${value.toFixed(2)}`,
-      },
-      min: 0,
-      max: 1,
-    },
-  },
-  plugins: {
-    legend: {
-      position: 'top' as const,
-      align: 'end' as const,
-      labels: {
-        color: COLORS.TEXT,
-        font: { size: 10 },
-        boxWidth: 10,
-        boxHeight: 10,
-        padding: 12,
-        usePointStyle: true,
-      },
-    },
-    tooltip: {
-      backgroundColor: '#18181b',
-      titleColor: '#e4e4e7',
-      bodyColor: '#a1a1aa',
-      borderColor: '#3f3f46',
-      borderWidth: 1,
-      titleFont: { size: 11, family: 'monospace' },
-      bodyFont: { size: 10, family: 'monospace' },
-      padding: 8,
-      callbacks: {
-        title: (items: any[]) => {
-          if (!items[0]) return ''
-          const d = new Date(items[0].raw.x)
-          return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
-        },
-        label: (item: any) => {
-          const buy = item.raw._buy
-          if (!buy) return ''
-          const lines = [
-            `${buy.side} ${buy.size} @ $${buy.price.toFixed(3)}`,
-            `Reason: ${buy.reason}`,
-          ]
-          if (buy.pairCost !== null) lines.push(`Pair cost: ${buy.pairCost.toFixed(4)}`)
-          lines.push(buy.merged ? `Merged (group ${buy.mergeGroupIds.join(',')})` : 'UNMERGED')
-          return lines
+    onClick: onChartClick,
+    scales: {
+      x: {
+        type: 'linear' as const,
+        grid: { color: COLORS.GRID, drawTicks: false },
+        border: { color: COLORS.GRID },
+        ticks: {
+          color: COLORS.TEXT,
+          font: { size: tickFontSize, family: 'monospace' },
+          callback: (value: number) => {
+            const d = new Date(value)
+            return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')}`
+          },
+          maxTicksLimit: maxTicks,
         },
       },
+      y: {
+        grid: { color: COLORS.GRID, drawTicks: false },
+        border: { color: COLORS.GRID },
+        ticks: {
+          color: COLORS.TEXT,
+          font: { size: tickFontSize, family: 'monospace' },
+          callback: (value: number) => `$${value.toFixed(2)}`,
+        },
+        min: 0,
+        max: 1,
+      },
     },
-    annotation: {
-      annotations: annotations.value,
+    plugins: {
+      legend: {
+        display: !mobile,
+        position: 'top' as const,
+        align: 'end' as const,
+        labels: {
+          color: COLORS.TEXT,
+          font: { size: 10 },
+          boxWidth: 10,
+          boxHeight: 10,
+          padding: 12,
+          usePointStyle: true,
+        },
+      },
+      tooltip: {
+        backgroundColor: '#18181b',
+        titleColor: '#e4e4e7',
+        bodyColor: '#a1a1aa',
+        borderColor: '#3f3f46',
+        borderWidth: 1,
+        titleFont: { size: mobile ? 10 : 11, family: 'monospace' },
+        bodyFont: { size: mobile ? 9 : 10, family: 'monospace' },
+        padding: mobile ? 6 : 8,
+        callbacks: {
+          title: (items: any[]) => {
+            if (!items[0]) return ''
+            const d = new Date(items[0].raw.x)
+            return d.toISOString().replace('T', ' ').slice(0, 19) + ' UTC'
+          },
+          label: (item: any) => {
+            const buy = item.raw._buy
+            if (!buy) return ''
+            const lines = [
+              `${buy.side} ${buy.size} @ $${buy.price.toFixed(3)}`,
+              `Reason: ${buy.reason}`,
+            ]
+            if (buy.pairCost !== null) lines.push(`Pair cost: ${buy.pairCost.toFixed(4)}`)
+            lines.push(buy.merged ? `Merged (group ${buy.mergeGroupIds.join(',')})` : 'UNMERGED')
+            return lines
+          },
+        },
+      },
+      annotation: {
+        annotations: annotations.value,
+      },
     },
-  },
-}))
+  }
+})
 
 // ── Selected group info badge ──────────────────────────────────────
 const selectedMerge = computed(() => {
@@ -343,7 +366,7 @@ const selectedMerge = computed(() => {
 </script>
 
 <template>
-  <div class="w-full h-full min-h-[300px] relative">
+  <div class="w-full h-full min-h-[200px] sm:min-h-[300px] relative">
     <Scatter
       v-if="round && round.buys.length > 0"
       :data="(chartData as any)"
@@ -358,25 +381,25 @@ const selectedMerge = computed(() => {
     <Transition name="fade">
       <div
         v-if="selectedMerge"
-        class="absolute bottom-3 left-3 flex items-center gap-3 px-3 py-1.5 rounded bg-zinc-800/90 border border-zinc-700 text-xs tabular-nums backdrop-blur-sm"
+        class="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 flex items-center gap-1.5 sm:gap-3 px-2 sm:px-3 py-1 sm:py-1.5 rounded bg-zinc-800/90 border border-zinc-700 text-[10px] sm:text-xs tabular-nums backdrop-blur-sm max-w-[calc(100%-1rem)]"
       >
-        <span class="text-zinc-400">
-          Merge <span class="text-zinc-200 font-medium">#{{ selectedMerge.mergeGroupId }}</span>
+        <span class="text-zinc-400 shrink-0">
+          M<span class="text-zinc-200 font-medium">#{{ selectedMerge.mergeGroupId }}</span>
         </span>
-        <span class="text-zinc-500">|</span>
-        <span class="text-zinc-400">
+        <span class="text-zinc-500 hidden sm:inline">|</span>
+        <span class="text-zinc-400 hidden sm:inline">
           {{ selectedMerge.pairs }} pairs
         </span>
-        <span class="text-zinc-500">|</span>
-        <span class="text-zinc-400">
+        <span class="text-zinc-500 hidden sm:inline">|</span>
+        <span class="text-zinc-400 hidden sm:inline">
           cost <span class="text-zinc-300">{{ selectedMerge.pairCost.toFixed(4) }}</span>
         </span>
         <span class="text-zinc-500">|</span>
-        <span class="text-emerald-400 font-medium">
+        <span class="text-emerald-400 font-medium shrink-0">
           +${{ selectedMerge.profit.toFixed(2) }}
         </span>
         <button
-          class="text-zinc-500 hover:text-zinc-300 transition-colors ml-1"
+          class="text-zinc-500 hover:text-zinc-300 transition-colors ml-0.5 sm:ml-1 shrink-0"
           title="Clear selection"
           @click="selectedGroupId = null"
         >

@@ -66,7 +66,7 @@ const totalGroups = computed(() => Object.keys(filteredMarkets.value).length)
 </script>
 
 <template>
-  <aside class="w-60 shrink-0 h-screen bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden">
+  <aside class="w-72 sm:w-60 shrink-0 h-[100dvh] bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden">
     <!-- Header -->
     <div class="px-4 py-3 border-b border-zinc-800">
       <h1 class="text-sm font-semibold text-zinc-300 tracking-wide uppercase">Gabagool</h1>
@@ -112,11 +112,11 @@ const totalGroups = computed(() => Object.keys(filteredMarkets.value).length)
     </div>
 
     <!-- Market List -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="flex-1 overflow-y-auto overscroll-contain">
       <div v-for="(rounds, prefix) in filteredMarkets" :key="prefix" class="border-b border-zinc-800/50">
         <!-- Group header -->
         <button
-          class="w-full px-4 py-2 flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors"
+          class="w-full px-4 py-3 sm:py-2 flex items-center gap-2 text-xs font-medium text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/50 transition-colors"
           @click="toggleGroup(String(prefix))"
         >
           <svg
@@ -135,7 +135,7 @@ const totalGroups = computed(() => Object.keys(filteredMarkets.value).length)
             v-for="(round, idx) in rounds"
             :key="round.slug"
             :class="[
-              'w-full pl-8 pr-4 py-1.5 flex items-center gap-2 text-xs transition-colors',
+              'w-full pl-8 pr-4 py-2.5 sm:py-1.5 flex items-center gap-2 text-xs transition-colors',
               selectedMarket === round.slug
                 ? 'bg-zinc-800 text-zinc-100'
                 : 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800/30'
