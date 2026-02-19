@@ -18,10 +18,6 @@ ChartJS.register(LinearScale, PointElement, LineElement, Tooltip, Legend, TimeSc
 const props = defineProps<{
   round: RoundSummary
   liveFeedEnabled?: boolean
-  yesAsk?: PricePoint[]
-  noAsk?: PricePoint[]
-  yesBid?: PricePoint[]
-  noBid?: PricePoint[]
   cryptoPrice?: PricePoint[]
   cryptoSymbol?: string | null
 }>()
@@ -61,12 +57,7 @@ const COLORS = {
   MERGE_LINE_NO_HI: '#fbbf24dd',
   GRID: '#27272a',        // zinc-800
   TEXT: '#a1a1aa',         // zinc-400
-  // Live feed colors
-  LIVE_YES_ASK: '#2dd4bf55',   // teal, semi-transparent
-  LIVE_YES_BID: '#2dd4bf30',
-  LIVE_NO_ASK: '#fbbf2455',    // amber, semi-transparent
-  LIVE_NO_BID: '#fbbf2430',
-  LIVE_CRYPTO: '#71717a88',    // zinc-500, subtle
+  LIVE_CRYPTO: '#71717a55',    // zinc-500, very subtle background line
 }
 
 function toMs(ts: string): number {
@@ -169,81 +160,21 @@ const chartData = computed(() => {
     },
   ]
 
-  // ── Live feed line datasets ─────────────────────────────────────
-  if (props.liveFeedEnabled) {
-    if (props.yesAsk && props.yesAsk.length > 0) {
-      datasets.push({
-        label: 'YES Ask',
-        data: props.yesAsk,
-        borderColor: COLORS.LIVE_YES_ASK,
-        backgroundColor: 'transparent',
-        showLine: true,
-        borderWidth: 1.5,
-        pointRadius: 0,
-        pointHitRadius: 0,
-        tension: 0.2,
-        order: 10, // Draw behind scatter points
-      })
-    }
-    if (props.yesBid && props.yesBid.length > 0) {
-      datasets.push({
-        label: 'YES Bid',
-        data: props.yesBid,
-        borderColor: COLORS.LIVE_YES_BID,
-        backgroundColor: 'transparent',
-        showLine: true,
-        borderWidth: 1,
-        borderDash: [3, 3],
-        pointRadius: 0,
-        pointHitRadius: 0,
-        tension: 0.2,
-        order: 10,
-      })
-    }
-    if (props.noAsk && props.noAsk.length > 0) {
-      datasets.push({
-        label: 'NO Ask',
-        data: props.noAsk,
-        borderColor: COLORS.LIVE_NO_ASK,
-        backgroundColor: 'transparent',
-        showLine: true,
-        borderWidth: 1.5,
-        pointRadius: 0,
-        pointHitRadius: 0,
-        tension: 0.2,
-        order: 10,
-      })
-    }
-    if (props.noBid && props.noBid.length > 0) {
-      datasets.push({
-        label: 'NO Bid',
-        data: props.noBid,
-        borderColor: COLORS.LIVE_NO_BID,
-        backgroundColor: 'transparent',
-        showLine: true,
-        borderWidth: 1,
-        borderDash: [3, 3],
-        pointRadius: 0,
-        pointHitRadius: 0,
-        tension: 0.2,
-        order: 10,
-      })
-    }
-    if (props.cryptoPrice && props.cryptoPrice.length > 0) {
-      datasets.push({
-        label: props.cryptoSymbol || 'Crypto',
-        data: props.cryptoPrice,
-        borderColor: COLORS.LIVE_CRYPTO,
-        backgroundColor: 'transparent',
-        showLine: true,
-        borderWidth: 1.5,
-        pointRadius: 0,
-        pointHitRadius: 0,
-        tension: 0.3,
-        order: 11,
-        yAxisID: 'yCrypto', // secondary axis
-      })
-    }
+  // ── Live crypto price background line ─────────────────────────────
+  if (props.liveFeedEnabled && props.cryptoPrice && props.cryptoPrice.length > 0) {
+    datasets.push({
+      label: props.cryptoSymbol || 'Crypto',
+      data: props.cryptoPrice,
+      borderColor: COLORS.LIVE_CRYPTO,
+      backgroundColor: 'transparent',
+      showLine: true,
+      borderWidth: 1.5,
+      pointRadius: 0,
+      pointHitRadius: 0,
+      tension: 0.3,
+      order: 11, // Draw behind scatter points (higher = further back)
+      yAxisID: 'yCrypto', // secondary axis on the right
+    })
   }
 
   return { datasets }
@@ -397,14 +328,14 @@ const chartOptions = computed(() => {
     },
   }
 
-  // Add secondary axis for crypto price
+  // Add secondary axis for crypto price (right side, no grid lines on chart area)
   if (hasCryptoData.value) {
     scales.yCrypto = {
       position: 'right' as const,
       grid: { drawOnChartArea: false, drawTicks: false },
       border: { color: COLORS.GRID },
       ticks: {
-        color: '#71717a',
+        color: '#52525b', // zinc-600, subtle
         font: { size: mobile ? 7 : 9, family: 'monospace' },
         callback: (value: number) => `$${value.toFixed(0)}`,
         maxTicksLimit: 5,
@@ -435,9 +366,8 @@ const chartOptions = computed(() => {
           padding: 12,
           usePointStyle: true,
           filter: (item: any) => {
-            // Hide live feed items from legend to keep it clean
+            // Hide crypto line from legend to keep it clean
             const label = item.text || ''
-            if (['YES Ask', 'YES Bid', 'NO Ask', 'NO Bid'].includes(label)) return false
             if (props.cryptoSymbol && label === props.cryptoSymbol) return false
             return true
           },
@@ -453,7 +383,7 @@ const chartOptions = computed(() => {
         bodyFont: { size: mobile ? 9 : 10, family: 'monospace' },
         padding: mobile ? 6 : 8,
         filter: (item: any) => {
-          // Only show tooltips for scatter points, not live feed lines
+          // Only show tooltips for scatter points, not live feed line
           return item.raw?._buy !== undefined
         },
         callbacks: {

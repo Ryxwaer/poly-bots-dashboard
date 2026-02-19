@@ -212,10 +212,6 @@ onUnmounted(() => {
                 <OrderChart
                   :round="roundData"
                   :live-feed-enabled="liveFeed.enabled.value"
-                  :yes-ask="liveFeed.yesAsk.value"
-                  :no-ask="liveFeed.noAsk.value"
-                  :yes-bid="liveFeed.yesBid.value"
-                  :no-bid="liveFeed.noBid.value"
                   :crypto-price="liveFeed.cryptoPrice.value"
                   :crypto-symbol="liveFeed.cryptoSymbol.value"
                 />
