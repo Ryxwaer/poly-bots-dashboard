@@ -1,6 +1,6 @@
 services:
   gabagool-dashboard:
-    container_name: gabagool-dashboard
+    container_name: ${CONTAINER_NAME:-gabagool-dashboard}
     build:
       context: .
     pull_policy: build
