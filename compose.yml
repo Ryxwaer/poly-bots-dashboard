@@ -1,0 +1,18 @@
+services:
+  gabagool-dashboard:
+    container_name: gabagool-dashboard
+    build:
+      context: .
+    pull_policy: build
+    image: gabagool-dashboard:latest
+    restart: unless-stopped
+    environment:
+      NUXT_MONGO_URI: ${MONGO_URI}
+    security_opt:
+      - label:disable
+    networks:
+      - nginx-proxy-manager_default
+
+networks:
+  nginx-proxy-manager_default:
+    external: true
