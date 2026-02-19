@@ -4,7 +4,6 @@ import type { RoundSummary } from '~/server/utils/pairing'
 const { markets, loading: marketsLoading, fetchMarkets } = useMarkets()
 const { roundData, loading: roundLoading, fetchRound } = useRoundEvents()
 const { lastEvent, connected, onEvent, connect } = useEventStream()
-const liveFeed = useLiveFeed()
 
 const selectedMarket = ref<string | null>(null)
 const autoTrack = ref(true)
@@ -40,15 +39,6 @@ watch(modeFilter, async () => {
     await fetchRound(selectedMarket.value, modeFilter.value)
   }
 })
-
-// Start/stop live feed when market changes or toggle flips
-watch([() => selectedMarket.value, () => liveFeed.enabled.value], ([slug, enabled]) => {
-  if (slug && enabled) {
-    liveFeed.start(slug)
-  } else {
-    liveFeed.stop()
-  }
-}, { immediate: true })
 
 // Handle SSE events
 onEvent(async (evt) => {
@@ -143,40 +133,6 @@ onUnmounted(() => {
           {{ connected ? 'Live' : 'Disconnected' }}
         </span>
         <span v-if="autoTrack" class="text-teal-500 ml-2">auto-tracking</span>
-
-        <!-- Spacer -->
-        <div class="flex-1" />
-
-        <!-- Live feed toggle -->
-        <button
-          v-if="selectedMarket"
-          :class="[
-            'flex items-center gap-1.5 px-2 py-0.5 rounded transition-colors',
-            liveFeed.enabled.value
-              ? 'bg-violet-500/20 text-violet-300'
-              : 'text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800'
-          ]"
-          @click="liveFeed.toggle()"
-          title="Toggle live price feed (Binance + Polymarket)"
-        >
-          <!-- Signal icon -->
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9.348 14.652a3.75 3.75 0 010-5.304m5.304 0a3.75 3.75 0 010 5.304m-7.425 2.121a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.788m13.788 0c3.808 3.808 3.808 9.98 0 13.788" />
-          </svg>
-          <span class="hidden sm:inline">Feed</span>
-          <span v-if="liveFeed.enabled.value && liveFeed.connected.value"
-            class="w-1 h-1 rounded-full bg-violet-400 animate-pulse"
-          />
-        </button>
-
-        <!-- Crypto price badge -->
-        <span
-          v-if="liveFeed.enabled.value && liveFeed.latestCryptoPrice.value !== null"
-          class="text-zinc-400 tabular-nums"
-        >
-          {{ liveFeed.cryptoSymbol.value }} ${{ liveFeed.latestCryptoPrice.value.toFixed(2) }}
-        </span>
       </div>
 
       <!-- Loading state -->
@@ -209,12 +165,7 @@ onUnmounted(() => {
           <div class="flex-shrink-0 h-[40%] sm:h-[45%] min-h-[220px] sm:min-h-[280px] p-2 sm:p-4">
             <div class="w-full h-full bg-zinc-900 rounded border border-zinc-800 p-2 sm:p-3">
               <ClientOnly>
-                <OrderChart
-                  :round="roundData"
-                  :live-feed-enabled="liveFeed.enabled.value"
-                  :crypto-price="liveFeed.cryptoPrice.value"
-                  :crypto-symbol="liveFeed.cryptoSymbol.value"
-                />
+                <OrderChart :round="roundData" />
               </ClientOnly>
             </div>
           </div>
