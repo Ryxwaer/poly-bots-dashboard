@@ -11,11 +11,19 @@ import {
 } from 'chart.js'
 import annotationPlugin from 'chartjs-plugin-annotation'
 import type { RoundSummary, AnnotatedBuy, AnnotatedMerge } from '~/server/utils/pairing'
+import type { PricePoint } from '~/composables/useLiveFeed'
 
 ChartJS.register(LinearScale, PointElement, LineElement, Tooltip, Legend, TimeScale, annotationPlugin)
 
 const props = defineProps<{
   round: RoundSummary
+  liveFeedEnabled?: boolean
+  yesAsk?: PricePoint[]
+  noAsk?: PricePoint[]
+  yesBid?: PricePoint[]
+  noBid?: PricePoint[]
+  cryptoPrice?: PricePoint[]
+  cryptoSymbol?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -53,6 +61,12 @@ const COLORS = {
   MERGE_LINE_NO_HI: '#fbbf24dd',
   GRID: '#27272a',        // zinc-800
   TEXT: '#a1a1aa',         // zinc-400
+  // Live feed colors
+  LIVE_YES_ASK: '#2dd4bf55',   // teal, semi-transparent
+  LIVE_YES_BID: '#2dd4bf30',
+  LIVE_NO_ASK: '#fbbf2455',    // amber, semi-transparent
+  LIVE_NO_BID: '#fbbf2430',
+  LIVE_CRYPTO: '#71717a88',    // zinc-500, subtle
 }
 
 function toMs(ts: string): number {
@@ -120,42 +134,119 @@ const chartData = computed(() => {
     },
   })
 
-  return {
-    datasets: [
-      {
-        label: 'YES (merged)',
-        data: yesMerged.map(toPoint),
-        ...scriptable(COLORS.YES, COLORS.YES_DIM, COLORS.YES, COLORS.YES_DIM, 6, 1),
-        pointHoverRadius: 8,
-        pointStyle: 'circle' as const,
-        showLine: false,
-      },
-      {
-        label: 'YES (unmerged)',
-        data: yesUnmerged.map(toPoint),
-        ...scriptable(COLORS.UNMERGED_DIM, COLORS.UNMERGED_DIM, COLORS.UNMERGED, COLORS.UNMERGED_DIM, 7, 2),
-        pointHoverRadius: 9,
-        pointStyle: 'circle' as const,
-        showLine: false,
-      },
-      {
-        label: 'NO (merged)',
-        data: noMerged.map(toPoint),
-        ...scriptable(COLORS.NO, COLORS.NO_DIM, COLORS.NO, COLORS.NO_DIM, 6, 1),
-        pointHoverRadius: 8,
-        pointStyle: 'rectRot' as const,
-        showLine: false,
-      },
-      {
-        label: 'NO (unmerged)',
-        data: noUnmerged.map(toPoint),
-        ...scriptable(COLORS.UNMERGED_DIM, COLORS.UNMERGED_DIM, COLORS.UNMERGED, COLORS.UNMERGED_DIM, 7, 2),
-        pointHoverRadius: 9,
-        pointStyle: 'rectRot' as const,
-        showLine: false,
-      },
-    ],
+  const datasets: any[] = [
+    {
+      label: 'YES (merged)',
+      data: yesMerged.map(toPoint),
+      ...scriptable(COLORS.YES, COLORS.YES_DIM, COLORS.YES, COLORS.YES_DIM, 6, 1),
+      pointHoverRadius: 8,
+      pointStyle: 'circle' as const,
+      showLine: false,
+    },
+    {
+      label: 'YES (unmerged)',
+      data: yesUnmerged.map(toPoint),
+      ...scriptable(COLORS.UNMERGED_DIM, COLORS.UNMERGED_DIM, COLORS.UNMERGED, COLORS.UNMERGED_DIM, 7, 2),
+      pointHoverRadius: 9,
+      pointStyle: 'circle' as const,
+      showLine: false,
+    },
+    {
+      label: 'NO (merged)',
+      data: noMerged.map(toPoint),
+      ...scriptable(COLORS.NO, COLORS.NO_DIM, COLORS.NO, COLORS.NO_DIM, 6, 1),
+      pointHoverRadius: 8,
+      pointStyle: 'rectRot' as const,
+      showLine: false,
+    },
+    {
+      label: 'NO (unmerged)',
+      data: noUnmerged.map(toPoint),
+      ...scriptable(COLORS.UNMERGED_DIM, COLORS.UNMERGED_DIM, COLORS.UNMERGED, COLORS.UNMERGED_DIM, 7, 2),
+      pointHoverRadius: 9,
+      pointStyle: 'rectRot' as const,
+      showLine: false,
+    },
+  ]
+
+  // ── Live feed line datasets ─────────────────────────────────────
+  if (props.liveFeedEnabled) {
+    if (props.yesAsk && props.yesAsk.length > 0) {
+      datasets.push({
+        label: 'YES Ask',
+        data: props.yesAsk,
+        borderColor: COLORS.LIVE_YES_ASK,
+        backgroundColor: 'transparent',
+        showLine: true,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHitRadius: 0,
+        tension: 0.2,
+        order: 10, // Draw behind scatter points
+      })
+    }
+    if (props.yesBid && props.yesBid.length > 0) {
+      datasets.push({
+        label: 'YES Bid',
+        data: props.yesBid,
+        borderColor: COLORS.LIVE_YES_BID,
+        backgroundColor: 'transparent',
+        showLine: true,
+        borderWidth: 1,
+        borderDash: [3, 3],
+        pointRadius: 0,
+        pointHitRadius: 0,
+        tension: 0.2,
+        order: 10,
+      })
+    }
+    if (props.noAsk && props.noAsk.length > 0) {
+      datasets.push({
+        label: 'NO Ask',
+        data: props.noAsk,
+        borderColor: COLORS.LIVE_NO_ASK,
+        backgroundColor: 'transparent',
+        showLine: true,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHitRadius: 0,
+        tension: 0.2,
+        order: 10,
+      })
+    }
+    if (props.noBid && props.noBid.length > 0) {
+      datasets.push({
+        label: 'NO Bid',
+        data: props.noBid,
+        borderColor: COLORS.LIVE_NO_BID,
+        backgroundColor: 'transparent',
+        showLine: true,
+        borderWidth: 1,
+        borderDash: [3, 3],
+        pointRadius: 0,
+        pointHitRadius: 0,
+        tension: 0.2,
+        order: 10,
+      })
+    }
+    if (props.cryptoPrice && props.cryptoPrice.length > 0) {
+      datasets.push({
+        label: props.cryptoSymbol || 'Crypto',
+        data: props.cryptoPrice,
+        borderColor: COLORS.LIVE_CRYPTO,
+        backgroundColor: 'transparent',
+        showLine: true,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHitRadius: 0,
+        tension: 0.3,
+        order: 11,
+        yAxisID: 'yCrypto', // secondary axis
+      })
+    }
   }
+
+  return { datasets }
 })
 
 // ── Annotations ────────────────────────────────────────────────────
@@ -267,11 +358,59 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
 })
 
+// ── Whether to show crypto secondary axis ──────────────────────────
+const hasCryptoData = computed(() =>
+  props.liveFeedEnabled && props.cryptoPrice && props.cryptoPrice.length > 0
+)
+
 // ── Chart options ──────────────────────────────────────────────────
 const chartOptions = computed(() => {
   const mobile = isMobile.value
   const tickFontSize = mobile ? 8 : 10
   const maxTicks = mobile ? 5 : 10
+
+  const scales: Record<string, any> = {
+    x: {
+      type: 'linear' as const,
+      grid: { color: COLORS.GRID, drawTicks: false },
+      border: { color: COLORS.GRID },
+      ticks: {
+        color: COLORS.TEXT,
+        font: { size: tickFontSize, family: 'monospace' },
+        callback: (value: number) => {
+          const d = new Date(value)
+          return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')}`
+        },
+        maxTicksLimit: maxTicks,
+      },
+    },
+    y: {
+      grid: { color: COLORS.GRID, drawTicks: false },
+      border: { color: COLORS.GRID },
+      ticks: {
+        color: COLORS.TEXT,
+        font: { size: tickFontSize, family: 'monospace' },
+        callback: (value: number) => `$${value.toFixed(2)}`,
+      },
+      min: 0,
+      max: 1,
+    },
+  }
+
+  // Add secondary axis for crypto price
+  if (hasCryptoData.value) {
+    scales.yCrypto = {
+      position: 'right' as const,
+      grid: { drawOnChartArea: false, drawTicks: false },
+      border: { color: COLORS.GRID },
+      ticks: {
+        color: '#71717a',
+        font: { size: mobile ? 7 : 9, family: 'monospace' },
+        callback: (value: number) => `$${value.toFixed(0)}`,
+        maxTicksLimit: 5,
+      },
+    }
+  }
 
   return {
     responsive: true,
@@ -282,33 +421,7 @@ const chartOptions = computed(() => {
       intersect: true,
     },
     onClick: onChartClick,
-    scales: {
-      x: {
-        type: 'linear' as const,
-        grid: { color: COLORS.GRID, drawTicks: false },
-        border: { color: COLORS.GRID },
-        ticks: {
-          color: COLORS.TEXT,
-          font: { size: tickFontSize, family: 'monospace' },
-          callback: (value: number) => {
-            const d = new Date(value)
-            return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}:${d.getUTCSeconds().toString().padStart(2, '0')}`
-          },
-          maxTicksLimit: maxTicks,
-        },
-      },
-      y: {
-        grid: { color: COLORS.GRID, drawTicks: false },
-        border: { color: COLORS.GRID },
-        ticks: {
-          color: COLORS.TEXT,
-          font: { size: tickFontSize, family: 'monospace' },
-          callback: (value: number) => `$${value.toFixed(2)}`,
-        },
-        min: 0,
-        max: 1,
-      },
-    },
+    scales,
     plugins: {
       legend: {
         display: !mobile,
@@ -321,6 +434,13 @@ const chartOptions = computed(() => {
           boxHeight: 10,
           padding: 12,
           usePointStyle: true,
+          filter: (item: any) => {
+            // Hide live feed items from legend to keep it clean
+            const label = item.text || ''
+            if (['YES Ask', 'YES Bid', 'NO Ask', 'NO Bid'].includes(label)) return false
+            if (props.cryptoSymbol && label === props.cryptoSymbol) return false
+            return true
+          },
         },
       },
       tooltip: {
@@ -332,6 +452,10 @@ const chartOptions = computed(() => {
         titleFont: { size: mobile ? 10 : 11, family: 'monospace' },
         bodyFont: { size: mobile ? 9 : 10, family: 'monospace' },
         padding: mobile ? 6 : 8,
+        filter: (item: any) => {
+          // Only show tooltips for scatter points, not live feed lines
+          return item.raw?._buy !== undefined
+        },
         callbacks: {
           title: (items: any[]) => {
             if (!items[0]) return ''
