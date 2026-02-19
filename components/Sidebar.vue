@@ -56,8 +56,9 @@ function formatSlug(slug: string, prefix: string): string {
   return datePart
 }
 
-function isLatestRound(rounds: MarketRound[], idx: number): boolean {
-  return idx === 0
+function isRecentlyActive(round: MarketRound): boolean {
+  const ONE_HOUR_MS = 60 * 60 * 1000
+  return Date.now() - new Date(round.latestTs).getTime() < ONE_HOUR_MS
 }
 
 // Count totals for the footer
@@ -149,7 +150,7 @@ const totalGroups = computed(() => Object.keys(filteredMarkets.value).length)
               class="shrink-0 text-[9px] px-1 rounded bg-violet-500/20 text-violet-400"
             >SIM</span>
             <span
-              v-if="isLatestRound(rounds, idx)"
+              v-if="isRecentlyActive(round)"
               class="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"
             />
             <span v-else class="ml-auto shrink-0 text-zinc-700 tabular-nums text-[10px]">
