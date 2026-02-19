@@ -4,7 +4,7 @@ let _client: MongoClient | null = null
 let _db: Db | null = null
 
 const DB_NAME = 'poly'
-const COLLECTION_NAME = 'gabagool_events'
+const DEFAULT_COLLECTION = 'gabagool_events'
 
 export async function getMongoClient(): Promise<MongoClient> {
   if (_client) return _client
@@ -29,5 +29,7 @@ export async function getDb(): Promise<Db> {
 
 export async function getEventsCollection(): Promise<Collection<Document>> {
   const db = await getDb()
-  return db.collection(COLLECTION_NAME)
+  const config = useRuntimeConfig()
+  const collectionName = config.mongoCollection || DEFAULT_COLLECTION
+  return db.collection(collectionName)
 }

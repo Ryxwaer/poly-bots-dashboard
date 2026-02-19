@@ -8,6 +8,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     mongoUri: process.env.MONGO_URI || '',
+    mongoCollection: process.env.MONGO_COLLECTION || 'gabagool_events',
   },
 
   devtools: { enabled: false },
