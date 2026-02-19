@@ -1,18 +1,29 @@
+x-dashboard: &dashboard-base
+  build:
+    context: .
+  pull_policy: build
+  restart: unless-stopped
+  security_opt:
+    - label:disable
+  networks:
+    - nginx-proxy-manager_default
+
 services:
   gabagool-dashboard:
-    container_name: ${CONTAINER_NAME:-gabagool-dashboard}
-    build:
-      context: .
-    pull_policy: build
+    <<: *dashboard-base
+    container_name: gabagool-dashboard
     image: gabagool-dashboard:latest
-    restart: unless-stopped
     environment:
       NUXT_MONGO_URI: ${MONGO_URI}
-      NUXT_MONGO_COLLECTION: ${NUXT_MONGO_COLLECTION:-gabagool_events}
-    security_opt:
-      - label:disable
-    networks:
-      - nginx-proxy-manager_default
+      NUXT_MONGO_COLLECTION: gabagool_events
+
+  gabagool22-dashboard:
+    <<: *dashboard-base
+    container_name: gabagool22-dashboard
+    image: gabagool22-dashboard:latest
+    environment:
+      NUXT_MONGO_URI: ${MONGO_URI}
+      NUXT_MONGO_COLLECTION: gabagool22_events
 
 networks:
   nginx-proxy-manager_default:
