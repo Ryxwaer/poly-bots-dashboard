@@ -66,7 +66,7 @@ const totalGroups = computed(() => Object.keys(filteredMarkets.value).length)
 </script>
 
 <template>
-  <aside class="w-72 sm:w-60 shrink-0 h-[100dvh] bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden">
+  <aside class="w-72 sm:w-60 shrink-0 h-screen bg-zinc-900 border-r border-zinc-800 flex flex-col overflow-hidden">
     <!-- Header -->
     <div class="px-4 py-3 border-b border-zinc-800">
       <h1 class="text-sm font-semibold text-zinc-300 tracking-wide uppercase">Gabagool</h1>

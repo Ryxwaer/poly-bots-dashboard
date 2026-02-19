@@ -76,7 +76,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex h-[100dvh] overflow-hidden bg-zinc-950">
+  <div class="flex h-screen overflow-hidden bg-zinc-950">
     <!-- Mobile sidebar backdrop -->
     <Transition
       enter-active-class="transition-opacity duration-200"
