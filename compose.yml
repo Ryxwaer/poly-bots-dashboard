@@ -25,6 +25,14 @@ services:
       NUXT_MONGO_URI: ${MONGO_URI}
       NUXT_MONGO_COLLECTION: gabagool22_events
 
+  hedge-dashboard:
+    <<: *dashboard-base
+    container_name: hedge-dashboard
+    image: hedge-dashboard:latest
+    environment:
+      NUXT_MONGO_URI: ${MONGO_URI}
+      NUXT_MONGO_COLLECTION: hedge_events
+
 networks:
   nginx-proxy-manager_default:
     external: true
